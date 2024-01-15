@@ -62,7 +62,7 @@ bool init() {
         return false;
     }
 
-    gFont = TTF_OpenFont("safu.ttf", 24);
+    gFont = TTF_OpenFont("uthfol.ttf", 24);
     if (gFont == nullptr) {
         std::cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << std::endl;
         return false;
@@ -231,7 +231,7 @@ void renderStartScreen() {
     SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255); // Pink color
     SDL_RenderClear(gRenderer);
 
-    drawButton(startButton, "Start");
+    drawButton(startButton, " Game Start");
 
     if (startButton.isClicked) {
         currentState = GAME;
