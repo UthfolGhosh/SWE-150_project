@@ -93,17 +93,18 @@ void spawnFood() {
 void drawSnake() {
     for (int i = 0; i < snakeLength; ++i) {
         SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
-        SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 0); // Green color
+        SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 0);
         SDL_RenderFillRect(gRenderer, &snakeRect);
     }
 }
 
 void drawFood() {
     SDL_Rect foodRect = {food.x, food.y, CELL_SIZE, CELL_SIZE};
-    SDL_SetRenderDrawColor(gRenderer, 255, 0, 255, 0); // Red color
+    SDL_SetRenderDrawColor(gRenderer, 255, 0, 255, 0); 
     SDL_RenderFillRect(gRenderer, &foodRect);
 }
 
+//display score
 void drawScore() {
     SDL_Color textColor = {0, 255, 0, 0};
     std::string scoreText = "Score: " + std::to_string(score);
@@ -111,14 +112,14 @@ void drawScore() {
     SDL_Surface* textSurface = TTF_RenderText_Solid(gFont, scoreText.c_str(), textColor);
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(gRenderer, textSurface);
 
-    SDL_Rect textRect = {10, 10, textSurface->w, textSurface->h};
+    SDL_Rect textRect = {5, 2, textSurface->w, textSurface->h};
     SDL_RenderCopy(gRenderer, textTexture, nullptr, &textRect);
 
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
 }
 
-
+//Draw the Game start button
 void drawButton(const Button& button, const std::string& buttonText) {
     SDL_SetRenderDrawColor(gRenderer, 255, 0, 0, 0);
     SDL_RenderFillRect(gRenderer, &button.rect);
@@ -141,7 +142,7 @@ bool checkCollisionWithButton(const Button& button, int mouseX, int mouseY) {
            mouseY >= button.rect.y && mouseY < button.rect.y + button.rect.h;
 }
 
-
+//Handle input
 void handleInput(SDL_Event& e) {
     switch (e.type) {
         case SDL_MOUSEBUTTONDOWN:
@@ -187,6 +188,7 @@ void handleInput(SDL_Event& e) {
     }
 }
 
+//Snake update part
 void moveSnake() {
     for (int i = snakeLength - 1; i > 0; --i) {
         snake[i] = snake[i - 1];
@@ -207,6 +209,7 @@ void moveSnake() {
             break;
     }
 }
+
 
 void checkFoodCollision() {
     if (snake[0].x == food.x && snake[0].y == food.y) {
