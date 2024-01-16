@@ -230,7 +230,7 @@ void checkFoodCollision() {
     if (snake[0].x == food.x && snake[0].y == food.y) {
         snakeLength++;
 
-        if(count==2)
+        if(count==7)
         {
           BigspawnFood();
         score += 10;
@@ -277,7 +277,7 @@ void renderGameScreen() {
 
     drawSnake();
 
-    if(count==2)
+    if(count==3)
     {
       BigdrawFood();
     }
