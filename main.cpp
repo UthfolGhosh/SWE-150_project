@@ -138,7 +138,7 @@ void drawScore() {
 
 //Draw the Game start button
 void drawButton(const Button& button, const std::string& buttonText) {
-    SDL_SetRenderDrawColor(gRenderer, 255, 0, 0, 0);
+    SDL_SetRenderDrawColor(gRenderer, 255, 110, 0, 220);
     SDL_RenderFillRect(gRenderer, &button.rect);
 
     SDL_Color textColor = {0, 0,255, 0};
@@ -276,11 +276,19 @@ void renderStartScreen() {
     }
 
     SDL_RenderPresent(gRenderer);
+
+    surface = nullptr;
+    Texture = nullptr;
 }
 
 void renderGameScreen() {
     SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
     SDL_RenderClear(gRenderer);
+
+    surface = SDL_LoadBMP("./gamescreen.bmp");
+	Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
+	SDL_FreeSurface(surface);
+	SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
 
     drawSnake();
 
@@ -293,6 +301,9 @@ void renderGameScreen() {
     drawScore();
 
     SDL_RenderPresent(gRenderer);
+
+    surface = nullptr;
+    Texture = nullptr;
 }
 
 void renderGameOverScreen() {
