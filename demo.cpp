@@ -1,4 +1,4 @@
-#include <iostream>
+ #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
@@ -9,8 +9,6 @@ const int CELL_SIZE = 20;
 SDL_Window* gWindow = nullptr;
 SDL_Renderer* gRenderer = nullptr;
 TTF_Font* gFont = nullptr;
-SDL_Surface* surface = nullptr;
-SDL_Texture* Texture = nullptr;
 
 enum GameState {
     START,
@@ -246,9 +244,9 @@ void checkFoodCollision() {
     }
 }
 
-bool checkCollisionWithWalls() {
+/*bool checkCollisionWithWalls() {
     return snake[0].x < 0 || snake[0].x >= SCREEN_WIDTH || snake[0].y < 0 || snake[0].y >= SCREEN_HEIGHT;
-}
+}*/
 
 bool checkCollisionWithItself() {
     for (int i = 1; i < snakeLength; ++i) {
@@ -262,11 +260,6 @@ bool checkCollisionWithItself() {
 void renderStartScreen() {
     SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
     SDL_RenderClear(gRenderer);
-
-    surface = SDL_LoadBMP("./Backgroud.bmp");
-	Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
-	SDL_FreeSurface(surface);
-	SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
 
     drawButton(startButton, " Game Start");
 
@@ -296,25 +289,29 @@ void renderGameScreen() {
 }
 
 void renderGameOverScreen() {
-     SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255); 
+    SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255); 
     SDL_RenderClear(gRenderer);
 
-	surface = SDL_LoadBMP("./Gameover.bmp");
-	Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
-	SDL_FreeSurface(surface);
-	SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
+    std::string gameOverText = "Game Over";
+    std::string scoreText = "Final Score: " + std::to_string(score);
 
-    std::string scoreText = "YOUR FINAL SCORE: " + std::to_string(score);
+    SDL_Color textColor = {255, 255, 255, 255};
 
-    SDL_Color textColor = {0,0,0, 255};
+    SDL_Surface* gameOverSurface = TTF_RenderText_Solid(gFont, gameOverText.c_str(), textColor);
+    SDL_Texture* gameOverTexture = SDL_CreateTextureFromSurface(gRenderer, gameOverSurface);
+
+    SDL_Rect gameOverRect = {SCREEN_WIDTH / 2 - gameOverSurface->w / 2, SCREEN_HEIGHT / 2 - 50, gameOverSurface->w, gameOverSurface->h};
+    SDL_RenderCopy(gRenderer, gameOverTexture, nullptr, &gameOverRect);
 
     SDL_Surface* scoreSurface = TTF_RenderText_Solid(gFont, scoreText.c_str(), textColor);
     SDL_Texture* scoreTexture = SDL_CreateTextureFromSurface(gRenderer, scoreSurface);
 
-    SDL_Rect scoreRect = {SCREEN_WIDTH / 2 - scoreSurface->w / 2, SCREEN_HEIGHT / 2 +50, scoreSurface->w, scoreSurface->h};
+    SDL_Rect scoreRect = {SCREEN_WIDTH / 2 - scoreSurface->w / 2, SCREEN_HEIGHT / 2 + 20, scoreSurface->w, scoreSurface->h};
     SDL_RenderCopy(gRenderer, scoreTexture, nullptr, &scoreRect);
 
+    SDL_FreeSurface(gameOverSurface);
     SDL_FreeSurface(scoreSurface);
+    SDL_DestroyTexture(gameOverTexture);
     SDL_DestroyTexture(scoreTexture);
 
     SDL_RenderPresent(gRenderer);
@@ -348,7 +345,7 @@ int main(int argc, char* args[]) {
             moveSnake();
             checkFoodCollision();
 
-            if (checkCollisionWithWalls() || checkCollisionWithItself()) {
+            if (/*checkCollisionWithWalls() || */checkCollisionWithItself()) {
                 gameover = true;
             }
 
