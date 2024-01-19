@@ -100,7 +100,19 @@ void BigspawnFood() {
 
 void drawSnake() {
     for (int i = 0; i < snakeLength; ++i) {
-        SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
+
+        if(i==0){
+         SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
+        SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 0);
+        SDL_RenderFillRect(gRenderer, &snakeRect);
+
+        surface = SDL_LoadBMP("Head.bmp");
+	    Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
+	    SDL_FreeSurface(surface);
+	    SDL_RenderCopy(gRenderer,Texture,NULL,&snakeRect);
+        }
+        else{
+            SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
         SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 0);
         SDL_RenderFillRect(gRenderer, &snakeRect);
 
@@ -108,6 +120,8 @@ void drawSnake() {
 	    Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
 	    SDL_FreeSurface(surface);
 	    SDL_RenderCopy(gRenderer,Texture,NULL,&snakeRect);
+        }
+        
     }
 }
 
