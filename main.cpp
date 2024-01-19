@@ -103,6 +103,11 @@ void drawSnake() {
         SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
         SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 0);
         SDL_RenderFillRect(gRenderer, &snakeRect);
+
+        surface = SDL_LoadBMP("Body.bmp");
+	    Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
+	    SDL_FreeSurface(surface);
+	    SDL_RenderCopy(gRenderer,Texture,NULL,&snakeRect);
     }
 }
 
@@ -307,25 +312,34 @@ void renderGameScreen() {
 }
 
 void renderGameOverScreen() {
-     SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255); 
+    SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255); 
     SDL_RenderClear(gRenderer);
 
-	surface = SDL_LoadBMP("./Gameover.bmp");
+	surface = SDL_LoadBMP("Backgroud.bmp");
 	Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
 	SDL_FreeSurface(surface);
 	SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
 
+    std::string gameOverText = "Game Over!!!";
     std::string scoreText = "YOUR FINAL SCORE: " + std::to_string(score);
 
-    SDL_Color textColor = {0,0,0, 255};
+    SDL_Color textColor = {100,150,200,250};
+
+    SDL_Surface* gameOverSurface = TTF_RenderText_Solid(gFont, gameOverText.c_str(), textColor);
+    SDL_Texture* gameOverTexture = SDL_CreateTextureFromSurface(gRenderer, gameOverSurface);
+
+    SDL_Rect gameOverRect = {SCREEN_WIDTH / 2 - gameOverSurface->w / 2, SCREEN_HEIGHT / 2 - 70, gameOverSurface->w, gameOverSurface->h};
+    SDL_RenderCopy(gRenderer, gameOverTexture, nullptr, &gameOverRect);
 
     SDL_Surface* scoreSurface = TTF_RenderText_Solid(gFont, scoreText.c_str(), textColor);
     SDL_Texture* scoreTexture = SDL_CreateTextureFromSurface(gRenderer, scoreSurface);
 
-    SDL_Rect scoreRect = {SCREEN_WIDTH / 2 - scoreSurface->w / 2, SCREEN_HEIGHT / 2 +50, scoreSurface->w, scoreSurface->h};
+    SDL_Rect scoreRect = {SCREEN_WIDTH / 2 - scoreSurface->w / 2, SCREEN_HEIGHT / 2 -20, scoreSurface->w, scoreSurface->h};
     SDL_RenderCopy(gRenderer, scoreTexture, nullptr, &scoreRect);
 
+    SDL_FreeSurface(gameOverSurface);
     SDL_FreeSurface(scoreSurface);
+    SDL_DestroyTexture(gameOverTexture);
     SDL_DestroyTexture(scoreTexture);
 
     SDL_RenderPresent(gRenderer);
