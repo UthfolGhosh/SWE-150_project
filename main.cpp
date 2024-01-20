@@ -134,8 +134,8 @@ void drawFood() {
 void BigdrawFood()
 {    
     
-     SDL_Rect foodRect = {food.x, food.y, CELL_SIZE+10, CELL_SIZE+10};
-    SDL_SetRenderDrawColor(gRenderer, 255, 0, 0 , 0); 
+     SDL_Rect foodRect = {food.x, food.y, CELL_SIZE, CELL_SIZE};
+    SDL_SetRenderDrawColor(gRenderer, 0, 255, 255 , 0); 
     SDL_RenderFillRect(gRenderer, &foodRect);
    
 }
@@ -304,7 +304,7 @@ void renderGameScreen() {
     SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
     SDL_RenderClear(gRenderer);
 
-    surface = SDL_LoadBMP("./gamescreen.bmp");
+    surface = SDL_LoadBMP("sscreenn.bmp");
 	Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
 	SDL_FreeSurface(surface);
 	SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
