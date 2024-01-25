@@ -82,7 +82,7 @@ bool init() {
         return false;
     }
 
-    startButton.rect = {SCREEN_WIDTH / 2 - 200, SCREEN_HEIGHT / 2 -200, 400, 200};
+    startButton.rect = {SCREEN_WIDTH / 2 - 200, SCREEN_HEIGHT / 2 -150, 400, 200};
     startButton.isClicked = false;
 
     exitButton.rect = {SCREEN_WIDTH / 2-10 , SCREEN_HEIGHT / 2 + 70,90, 30};
@@ -431,7 +431,19 @@ void renderStartScreen() {
 	 SDL_FreeSurface(surface);
 	 SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
 
-     drawButton(startButton, "Play GAME");
+    std::string Welcometext = "Welcome to Snake Game!";
+    SDL_Color textcolor = {110,0,0,255};
+
+    SDL_Surface* WelcomeSurface = TTF_RenderText_Solid(gFont, Welcometext.c_str(), textcolor);
+    SDL_Texture* WelcomeTexture = SDL_CreateTextureFromSurface(gRenderer, WelcomeSurface);
+
+    SDL_Rect WelcomeRect = {SCREEN_WIDTH / 2 - 150, SCREEN_HEIGHT / 2 -180, 300, 100};
+    SDL_RenderCopy(gRenderer, WelcomeTexture, nullptr, &WelcomeRect);
+
+    SDL_FreeSurface(WelcomeSurface);
+    SDL_DestroyTexture(WelcomeTexture);
+
+    drawButton(startButton, "Play GAME");
 
     if (startButton.isClicked) {
         resetGame();
