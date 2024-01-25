@@ -2,8 +2,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 600;
 const int CELL_SIZE = 20;
 
 SDL_Window* gWindow = nullptr;
@@ -31,25 +31,35 @@ struct Button {
 };
 
 Button startButton;
+Button restartButton;
+Button exitButton; // Added exit button
 
 Snake snake[100];
 int snakeLength = 1;
-int direction = 1;
+int direction = 1; // 0: up, 1: right, 2: down, 3: left
 
 SDL_Point food;
+
 int score = 0;
-int count = 0;
+int level = 0;
+int temp = 15;
+int High=0;
 
 bool gameover = false;
 
-//Initialization window,sdl_TTF
+struct Obstacle {
+    SDL_Rect rect;
+};
+
+Obstacle obstacles[4]; // Array to store obstacles
+
 bool init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
         return false;
     }
 
-    gWindow = SDL_CreateWindow("SnakeGame_Project", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    gWindow = SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     if (gWindow == nullptr) {
         std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         return false;
@@ -66,19 +76,25 @@ bool init() {
         return false;
     }
 
-    gFont = TTF_OpenFont("uthfol.ttf", 24);
+    gFont = TTF_OpenFont("bold.ttf", 24);
     if (gFont == nullptr) {
         std::cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << std::endl;
         return false;
     }
 
-    startButton.rect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - 50, 200, 100};
+    startButton.rect = {SCREEN_WIDTH / 2 - 200, SCREEN_HEIGHT / 2 -200, 400, 200};
     startButton.isClicked = false;
+
+    exitButton.rect = {SCREEN_WIDTH / 2-10 , SCREEN_HEIGHT / 2 + 70,90, 30};
+    exitButton.isClicked = false;
+
+    restartButton.rect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 + 70,90, 30};
+    restartButton.isClicked = false;
+
 
     return true;
 }
 
-//Colse program function
 void close() {
     SDL_DestroyRenderer(gRenderer);
     SDL_DestroyWindow(gWindow);
@@ -87,39 +103,110 @@ void close() {
     SDL_Quit();
 }
 
-//Food position
+void drawObstacles() {
+    for (int i = 0; i < 4; ++i) {
+        SDL_SetRenderDrawColor(gRenderer, 230,50,100, 120);
+        SDL_RenderFillRect(gRenderer, &obstacles[i].rect);
+    }
+}
+
+bool initObstacles() {
+    // Initialize obstacle positions
+    obstacles[0].rect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2, 200, 30};
+    obstacles[1].rect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - 150, 30, 300};
+    obstacles[2].rect = {SCREEN_WIDTH / 2 + 100, SCREEN_HEIGHT / 2 - 150, 30, 300};
+    obstacles[3].rect = {0, 0, SCREEN_WIDTH, 40};
+
+    return true;
+}
+
+//SDL_Rect obstagolrect1 = {SCREEN_WIDTH/2-100,SCREEN_HEIGHT/2,200,30};
+// SDL_Rect obstagolrect2 = {SCREEN_WIDTH/2-100,SCREEN_HEIGHT/2-150,30,300};
+//SDL_Rect obstagolrect3 = {SCREEN_WIDTH/2+100,SCREEN_HEIGHT/2-150,30,300};
+
+bool checkCollisionWithobstragol() {
+
+    if(snake[0].x >SCREEN_WIDTH/2-100 && snake[0].x <= SCREEN_WIDTH/2+100 && snake[0].y <SCREEN_HEIGHT/2+30 && snake[0].y >= SCREEN_HEIGHT/2)
+    {
+      return true;
+    }
+
+    if(snake[0].x >=SCREEN_WIDTH/2-105 && snake[0].x <= SCREEN_WIDTH/2-70 && snake[0].y <=SCREEN_HEIGHT/2+150 && snake[0].y >= SCREEN_HEIGHT/2-155)
+    {
+      return true;
+    }
+
+    if(snake[0].x >=SCREEN_WIDTH/2+95 && snake[0].x <= SCREEN_WIDTH/2+130 && snake[0].y <=SCREEN_HEIGHT/2+150 && snake[0].y >= SCREEN_HEIGHT/2-155)
+    {
+      return true;
+    }
+
+    return false;
+    
+}
+
+bool checkCollisionWithFoodobstragol()
+{
+    if(food.x >SCREEN_WIDTH/2-100 && food.x <= SCREEN_WIDTH/2+100 && food.y <SCREEN_HEIGHT/2+30 && food.y >= SCREEN_HEIGHT/2)
+    {
+      return true;
+    }
+
+    if(food.x >=SCREEN_WIDTH/2-105 && food.x <= SCREEN_WIDTH/2-70 && food.y <=SCREEN_HEIGHT/2+150 && food.y >= SCREEN_HEIGHT/2-155)
+    {
+      return true;
+    }
+
+    if(food.x >=SCREEN_WIDTH/2+95 && food.x <= SCREEN_WIDTH/2+130 && food.y <=SCREEN_HEIGHT/2+150 && food.y >= SCREEN_HEIGHT/2-155)
+    {
+      return true;
+    }
+
+    if(food.x >=0 && food.x <=SCREEN_WIDTH && food.y <=40 && food.y >=0)
+    {
+      return true;
+    }
+
+    return false;
+}
+
 void spawnFood() {
     food.x = rand() % (SCREEN_WIDTH / CELL_SIZE) * CELL_SIZE;
     food.y = rand() % (SCREEN_HEIGHT / CELL_SIZE) * CELL_SIZE;
-}
+    
+    while(checkCollisionWithFoodobstragol()){
+    food.x = rand() % (SCREEN_WIDTH / CELL_SIZE) * CELL_SIZE;
+    food.y = rand() % (SCREEN_HEIGHT / CELL_SIZE) * CELL_SIZE;
+    }
 
-void BigspawnFood() {
-    food.x = (rand() % (SCREEN_WIDTH / CELL_SIZE) * CELL_SIZE);
-    food.y = (rand() % (SCREEN_HEIGHT / CELL_SIZE) * CELL_SIZE);
 }
 
 void drawSnake() {
     for (int i = 0; i < snakeLength; ++i) {
 
-        if(i==0){
+       if(i==0){
          SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
         SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 0);
         SDL_RenderFillRect(gRenderer, &snakeRect);
 
         surface = SDL_LoadBMP("Head.bmp");
 	    Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
-	    SDL_FreeSurface(surface);
 	    SDL_RenderCopy(gRenderer,Texture,NULL,&snakeRect);
+
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(Texture);
         }
         else{
-            SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
+        SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
         SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 0);
         SDL_RenderFillRect(gRenderer, &snakeRect);
 
         surface = SDL_LoadBMP("Body.bmp");
 	    Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
-	    SDL_FreeSurface(surface);
 	    SDL_RenderCopy(gRenderer,Texture,NULL,&snakeRect);
+
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(Texture);
         }
         
     }
@@ -127,46 +214,58 @@ void drawSnake() {
 
 void drawFood() {
     SDL_Rect foodRect = {food.x, food.y, CELL_SIZE, CELL_SIZE};
-    SDL_SetRenderDrawColor(gRenderer, 255, 0, 255, 0); 
+    SDL_SetRenderDrawColor(gRenderer, 255, 0, 255, 0); // Red color
     SDL_RenderFillRect(gRenderer, &foodRect);
 }
 
-void BigdrawFood()
-{    
-    
-     SDL_Rect foodRect = {food.x, food.y, CELL_SIZE, CELL_SIZE};
-    SDL_SetRenderDrawColor(gRenderer, 0, 255, 255 , 0); 
-    SDL_RenderFillRect(gRenderer, &foodRect);
-   
-}
-
-//display score
 void drawScore() {
     SDL_Color textColor = {0, 255, 0, 0};
+    
+    // Score text
     std::string scoreText = "Score: " + std::to_string(score);
-
     SDL_Surface* textSurface = TTF_RenderText_Solid(gFont, scoreText.c_str(), textColor);
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(gRenderer, textSurface);
 
-    SDL_Rect textRect = {5, 2, textSurface->w, textSurface->h};
+    SDL_Rect textRect = {10, 7, textSurface->w, textSurface->h};
     SDL_RenderCopy(gRenderer, textTexture, nullptr, &textRect);
 
+    // Level text
+    std::string levelText = "Your Level: " + std::to_string(level);
+    SDL_Surface* levelTextSurface = TTF_RenderText_Solid(gFont, levelText.c_str(), textColor);
+    SDL_Texture* levelTextTexture = SDL_CreateTextureFromSurface(gRenderer, levelTextSurface);
+
+    SDL_Rect levelTextRect = {SCREEN_WIDTH - 190, 7, levelTextSurface->w, levelTextSurface->h};
+    SDL_RenderCopy(gRenderer, levelTextTexture, nullptr, &levelTextRect);
+
+    // Highscore text
+    std::string highscoreText = "HIGH Score: " + std::to_string(High);
+    SDL_Surface* highscoreTextSurface = TTF_RenderText_Solid(gFont, highscoreText.c_str(), textColor);
+    SDL_Texture* highscoreTextTexture = SDL_CreateTextureFromSurface(gRenderer, highscoreTextSurface);
+
+    SDL_Rect highscoreTextRect = {SCREEN_WIDTH / 2 - 100, 7, highscoreTextSurface->w, highscoreTextSurface->h};
+    SDL_RenderCopy(gRenderer, highscoreTextTexture, nullptr, &highscoreTextRect);
+
+    // Clean up surfaces and textures
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
+    SDL_FreeSurface(levelTextSurface);
+    SDL_DestroyTexture(levelTextTexture);
+    SDL_FreeSurface(highscoreTextSurface);
+    SDL_DestroyTexture(highscoreTextTexture);
 }
 
-//Draw the Game start button
-void drawButton(const Button& button, const std::string& buttonText) {
-    SDL_SetRenderDrawColor(gRenderer, 255, 110, 0, 220);
-    SDL_RenderFillRect(gRenderer, &button.rect);
 
-    SDL_Color textColor = {0, 0,255, 0};
+void drawButton(const Button& button, const std::string& buttonText) {
+    //SDL_SetRenderDrawColor(gRenderer, 255, 0, 0, 0); // Pink color for the button
+   // SDL_RenderFillRect(gRenderer, &button.rect);
+
+    SDL_Color textColor = {0,0, 0, 255};//{255,100, 160, 220}
     SDL_Surface* textSurface = TTF_RenderText_Solid(gFont, buttonText.c_str(), textColor);
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(gRenderer, textSurface);
 
     SDL_Rect textRect = {button.rect.x + button.rect.w / 2 - textSurface->w / 2,
                          button.rect.y + button.rect.h / 2 - textSurface->h / 2,
-                         textSurface->w, textSurface->h};
+                         textSurface->w+20, textSurface->h+30};
     SDL_RenderCopy(gRenderer, textTexture, nullptr, &textRect);
 
     SDL_FreeSurface(textSurface);
@@ -178,7 +277,20 @@ bool checkCollisionWithButton(const Button& button, int mouseX, int mouseY) {
            mouseY >= button.rect.y && mouseY < button.rect.y + button.rect.h;
 }
 
-//Handle input
+void resetGame() {
+    // Reset the game state and variables
+    currentState = GAME;
+    snake[0].x = 0;
+    snake[0].y = 0;
+    snakeLength = 1;
+    direction = 1;
+    level = 0;
+    score = 0;
+    gameover = false;
+    spawnFood();
+}
+
+
 void handleInput(SDL_Event& e) {
     switch (e.type) {
         case SDL_MOUSEBUTTONDOWN:
@@ -192,10 +304,28 @@ void handleInput(SDL_Event& e) {
                             startButton.isClicked = true;
                         }
                         break;
+                    case GAME_OVER:
+                        if (checkCollisionWithButton(exitButton, mouseX, mouseY)) {
+                            exitButton.isClicked = true;
+                               currentState = QUIT;
+                        }
+                        else if(checkCollisionWithButton(restartButton, mouseX, mouseY)) 
+                        {
+                            currentState = GAME;
+                            gameover = false;
+                            restartButton.isClicked = false;
+                            SDL_DestroyRenderer(gRenderer);
+                            SDL_DestroyWindow(gWindow);
+                            TTF_CloseFont(gFont);
+                            init();  // Initialize the game again
+                            resetGame();
+                            spawnFood();
+                        }  
+                        break;
                 }
             }
             break;
-
+            
         case SDL_KEYDOWN:
             switch (e.key.keysym.sym) {
                 case SDLK_UP:
@@ -218,13 +348,13 @@ void handleInput(SDL_Event& e) {
                         direction = 1;
                     }
                     break;
-                
+                // Add cases for other keys if needed
             }
             break;
+        // Add cases for other event types if needed
     }
 }
 
-//Snake update part
 void moveSnake() {
     for (int i = snakeLength - 1; i > 0; --i) {
         snake[i] = snake[i - 1];
@@ -233,128 +363,148 @@ void moveSnake() {
     switch (direction) {
         case 0:
             snake[0].y -= CELL_SIZE;
+            if (snake[0].y < 0) {
+                snake[0].y = SCREEN_HEIGHT - CELL_SIZE; // Wrap around to the bottom
+                  score -=3;
+            }
             break;
         case 1:
             snake[0].x += CELL_SIZE;
+            if (snake[0].x >= SCREEN_WIDTH) {
+                snake[0].x = 0; // Wrap around to the left
+                  score -=3;
+            }
             break;
         case 2:
             snake[0].y += CELL_SIZE;
+            if (snake[0].y >= SCREEN_HEIGHT) {
+                snake[0].y = 0; // Wrap around to the top
+                  score -=3;
+            }
             break;
         case 3:
             snake[0].x -= CELL_SIZE;
+            if (snake[0].x < 0) {
+                snake[0].x = SCREEN_WIDTH - CELL_SIZE; // Wrap around to the right
+                  score -=3;
+            }
             break;
     }
 }
 
-
 void checkFoodCollision() {
     if (snake[0].x == food.x && snake[0].y == food.y) {
         snakeLength++;
+        score += 5;
 
-        if(count==3 )
+    
+        if(temp<=score)
         {
-          BigspawnFood();
-        score += 10;
-        count = 0;
+          level +=1;
+          temp +=15;
         }
-        else{
+
+        if(High < score)
+        {
+            High = score;
+        }
+
         spawnFood();
-        score += 3;
-        count ++;
-        }
     }
 }
 
 bool checkCollisionWithWalls() {
     return snake[0].x < 0 || snake[0].x >= SCREEN_WIDTH || snake[0].y < 0 || snake[0].y >= SCREEN_HEIGHT;
+    
 }
 
 bool checkCollisionWithItself() {
     for (int i = 1; i < snakeLength; ++i) {
         if (snake[0].x == snake[i].x && snake[0].y == snake[i].y) {
-            return true;
+           return true;
         }
     }
     return false;
 }
 
 void renderStartScreen() {
-    SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255); // Black color
     SDL_RenderClear(gRenderer);
 
-    surface = SDL_LoadBMP("./Backgroud.bmp");
-	Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
-	SDL_FreeSurface(surface);
-	SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
+     surface = SDL_LoadBMP("startboard.bmp");
+	 Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
+	 SDL_FreeSurface(surface);
+	 SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
 
-    drawButton(startButton, " Game Start");
+     drawButton(startButton, "Play GAME");
 
     if (startButton.isClicked) {
+        resetGame();
         currentState = GAME;
         startButton.isClicked = false;
     }
 
     SDL_RenderPresent(gRenderer);
-
-    surface = nullptr;
-    Texture = nullptr;
 }
 
 void renderGameScreen() {
-    SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(gRenderer, 150,120,180,120); // Black color
     SDL_RenderClear(gRenderer);
 
-    surface = SDL_LoadBMP("sscreenn.bmp");
-	Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
-	SDL_FreeSurface(surface);
-	SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
-
-    drawSnake();
-
-    if(count==3)
-    {
-      BigdrawFood();
-    }
-    else
-    drawFood();
+    drawObstacles();
     drawScore();
+    drawSnake();
+    drawFood();
 
     SDL_RenderPresent(gRenderer);
-
-    surface = nullptr;
-    Texture = nullptr;
 }
 
 void renderGameOverScreen() {
-    SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255); 
+    SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255); // Black color
     SDL_RenderClear(gRenderer);
 
-	surface = SDL_LoadBMP("Backgroud.bmp");
-	Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
-	SDL_FreeSurface(surface);
-	SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
+    surface = SDL_LoadBMP("overboard.bmp");
+	 Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
+	 SDL_FreeSurface(surface);
+	 SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
 
-    std::string gameOverText = "Game Over!!!";
-    std::string scoreText = "YOUR FINAL SCORE: " + std::to_string(score);
+    std::string gameOverText = "GAME OVER!!!";
+    
+    std::string OverText2 = "Do you Play Again?";
 
-    SDL_Color textColor = {100,150,200,250};
+    std::string scoreText = "FINAL Score: " + std::to_string(score);
+
+    SDL_Color textColor = {255,110,110,255};
+    SDL_Color OptiontextColor = {0,0,0,255};
 
     SDL_Surface* gameOverSurface = TTF_RenderText_Solid(gFont, gameOverText.c_str(), textColor);
     SDL_Texture* gameOverTexture = SDL_CreateTextureFromSurface(gRenderer, gameOverSurface);
 
-    SDL_Rect gameOverRect = {SCREEN_WIDTH / 2 - gameOverSurface->w / 2, SCREEN_HEIGHT / 2 - 70, gameOverSurface->w, gameOverSurface->h};
+    SDL_Rect gameOverRect = {SCREEN_WIDTH / 2 - gameOverSurface->w / 2-10, SCREEN_HEIGHT / 2 - 170, gameOverSurface->w+50, gameOverSurface->h+50};
     SDL_RenderCopy(gRenderer, gameOverTexture, nullptr, &gameOverRect);
 
     SDL_Surface* scoreSurface = TTF_RenderText_Solid(gFont, scoreText.c_str(), textColor);
     SDL_Texture* scoreTexture = SDL_CreateTextureFromSurface(gRenderer, scoreSurface);
 
-    SDL_Rect scoreRect = {SCREEN_WIDTH / 2 - scoreSurface->w / 2, SCREEN_HEIGHT / 2 -20, scoreSurface->w, scoreSurface->h};
+    SDL_Rect scoreRect = {SCREEN_WIDTH / 2 - scoreSurface->w / 2, SCREEN_HEIGHT / 2 - 80, scoreSurface->w+20, scoreSurface->h+20};
     SDL_RenderCopy(gRenderer, scoreTexture, nullptr, &scoreRect);
+
+    SDL_Surface* OverSurface2 = TTF_RenderText_Solid(gFont, OverText2.c_str(), OptiontextColor);
+    SDL_Texture* OverTexture2 = SDL_CreateTextureFromSurface(gRenderer, OverSurface2);
+
+    SDL_Rect OverRect2 = {SCREEN_WIDTH / 2 - gameOverSurface->w / 2-10, SCREEN_HEIGHT / 2, gameOverSurface->w+20, gameOverSurface->h+30};
+    SDL_RenderCopy(gRenderer, OverTexture2, nullptr, &OverRect2);
 
     SDL_FreeSurface(gameOverSurface);
     SDL_FreeSurface(scoreSurface);
     SDL_DestroyTexture(gameOverTexture);
     SDL_DestroyTexture(scoreTexture);
+
+    exitButton.isClicked = false;
+    drawButton(exitButton, "No");
+
+    restartButton.isClicked = false;
+    drawButton(restartButton, "Yes");
 
     SDL_RenderPresent(gRenderer);
 }
@@ -365,10 +515,12 @@ int main(int argc, char* args[]) {
         return -1;
     }
 
-    SDL_Event e;
+     if (!initObstacles()) {
+        std::cerr << "Failed to initialize obstacles!" << std::endl;
+        return -1;
+    }
 
-    snake[0].x = 0;
-    snake[0].y = 0;
+    SDL_Event e;
 
     spawnFood();
 
@@ -376,7 +528,7 @@ int main(int argc, char* args[]) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 currentState = QUIT;
-            } else if (currentState == START || currentState == GAME) {
+            } else if (currentState == START || currentState == GAME || currentState == GAME_OVER) {
                 handleInput(e);
             }
         }
@@ -386,19 +538,27 @@ int main(int argc, char* args[]) {
         } else if (currentState == GAME && !gameover) {
             moveSnake();
             checkFoodCollision();
+           
 
-            if (checkCollisionWithWalls() || checkCollisionWithItself()) {
+            if ( checkCollisionWithItself()|| checkCollisionWithobstragol()) {
                 gameover = true;
+                currentState = GAME_OVER;
             }
 
             renderGameScreen();
-        } else if (gameover) {
+        } else if (currentState == GAME_OVER) {
             renderGameOverScreen();
+
+            if (exitButton.isClicked) {
+                currentState = QUIT;
+            }
         }
 
-        SDL_Delay(200);
+        // Add a small delay
+        SDL_Delay(120);
     }
-   close();
+
+    close();
 
     return 0;
 }
