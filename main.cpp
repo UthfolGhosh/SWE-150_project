@@ -458,6 +458,12 @@ void renderGameScreen() {
     SDL_SetRenderDrawColor(gRenderer, 60,130, 110, 30);
     SDL_RenderClear(gRenderer);
 
+    surface = SDL_LoadBMP("middle.bmp");
+	Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
+    SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(Texture);
+
     drawObstacles();
     drawScore();
     drawSnake();
