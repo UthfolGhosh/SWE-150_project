@@ -32,7 +32,7 @@ struct Button {
 
 Button startButton;
 Button restartButton;
-Button exitButton; // Added exit button
+Button exitButton; 
 
 Snake snake[100];
 int snakeLength = 1;
@@ -51,7 +51,7 @@ struct Obstacle {
     SDL_Rect rect;
 };
 
-Obstacle obstacles[4]; // Array to store obstacles
+Obstacle obstacles[4]; 
 
 bool init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -105,7 +105,7 @@ void close() {
 
 void drawObstacles() {
     for (int i = 0; i < 4; ++i) {
-        SDL_SetRenderDrawColor(gRenderer, 230,50,100, 120);
+        SDL_SetRenderDrawColor(gRenderer,10,180,140,100);
         SDL_RenderFillRect(gRenderer, &obstacles[i].rect);
     }
 }
@@ -214,12 +214,12 @@ void drawSnake() {
 
 void drawFood() {
     SDL_Rect foodRect = {food.x, food.y, CELL_SIZE, CELL_SIZE};
-    SDL_SetRenderDrawColor(gRenderer, 255, 0, 255, 0); // Red color
+    SDL_SetRenderDrawColor(gRenderer, 200,200,0, 0);
     SDL_RenderFillRect(gRenderer, &foodRect);
 }
 
 void drawScore() {
-    SDL_Color textColor = {0, 255, 0, 0};
+    SDL_Color textColor = {255, 250, 0, 0};
     
     // Score text
     std::string scoreText = "Score: " + std::to_string(score);
@@ -245,7 +245,6 @@ void drawScore() {
     SDL_Rect highscoreTextRect = {SCREEN_WIDTH / 2 - 100, 7, highscoreTextSurface->w, highscoreTextSurface->h};
     SDL_RenderCopy(gRenderer, highscoreTextTexture, nullptr, &highscoreTextRect);
 
-    // Clean up surfaces and textures
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
     SDL_FreeSurface(levelTextSurface);
@@ -256,8 +255,6 @@ void drawScore() {
 
 
 void drawButton(const Button& button, const std::string& buttonText) {
-    //SDL_SetRenderDrawColor(gRenderer, 255, 0, 0, 0); // Pink color for the button
-   // SDL_RenderFillRect(gRenderer, &button.rect);
 
     SDL_Color textColor = {0,0, 0, 255};//{255,100, 160, 220}
     SDL_Surface* textSurface = TTF_RenderText_Solid(gFont, buttonText.c_str(), textColor);
@@ -348,10 +345,8 @@ void handleInput(SDL_Event& e) {
                         direction = 1;
                     }
                     break;
-                // Add cases for other keys if needed
             }
             break;
-        // Add cases for other event types if needed
     }
 }
 
@@ -428,7 +423,7 @@ bool checkCollisionWithItself() {
 }
 
 void renderStartScreen() {
-    SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255); // Black color
+    SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255); 
     SDL_RenderClear(gRenderer);
 
      surface = SDL_LoadBMP("startboard.bmp");
@@ -448,7 +443,7 @@ void renderStartScreen() {
 }
 
 void renderGameScreen() {
-    SDL_SetRenderDrawColor(gRenderer, 150,120,180,120); // Black color
+    SDL_SetRenderDrawColor(gRenderer, 60,130, 110, 30);
     SDL_RenderClear(gRenderer);
 
     drawObstacles();
@@ -554,7 +549,6 @@ int main(int argc, char* args[]) {
             }
         }
 
-        // Add a small delay
         SDL_Delay(120);
     }
 
