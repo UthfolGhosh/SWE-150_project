@@ -209,16 +209,30 @@ void drawSnake() {
     for (int i = 0; i < snakeLength; ++i) {
 
        if(i==0){
-         SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
-        SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 0);
-        SDL_RenderFillRect(gRenderer, &snakeRect);
+            if(direction==0 || direction==2){
+             SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
+             SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 0);
+             SDL_RenderFillRect(gRenderer, &snakeRect);
 
-        surface = SDL_LoadBMP("Head.bmp");
-	    Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
-	    SDL_RenderCopy(gRenderer,Texture,NULL,&snakeRect);
+             surface = SDL_LoadBMP("Head.bmp");
+	         Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
+	         SDL_RenderCopy(gRenderer,Texture,NULL,&snakeRect);
 
-        SDL_FreeSurface(surface);
-        SDL_DestroyTexture(Texture);
+             SDL_FreeSurface(surface);
+             SDL_DestroyTexture(Texture);
+         }
+         else{
+             SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
+             SDL_SetRenderDrawColor(gRenderer, 0, 0, 255, 0);
+             SDL_RenderFillRect(gRenderer, &snakeRect);
+
+             surface = SDL_LoadBMP("head2.bmp");
+	         Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
+	         SDL_RenderCopy(gRenderer,Texture,NULL,&snakeRect);
+
+             SDL_FreeSurface(surface);
+             SDL_DestroyTexture(Texture);
+         }
         }
         else{
         SDL_Rect snakeRect = {snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE};
