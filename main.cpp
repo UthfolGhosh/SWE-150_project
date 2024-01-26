@@ -1,5 +1,6 @@
 #include <iostream>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>
 
 const int SCREEN_WIDTH = 800;
@@ -11,6 +12,9 @@ SDL_Renderer* gRenderer = nullptr;
 TTF_Font* gFont = nullptr;
 SDL_Surface* surface = nullptr;
 SDL_Texture* Texture = nullptr;
+
+Mix_Music* gMusic = NULL;
+Mix_Chunk* FMusic = NULL;
 
 enum GameState {
     START,
@@ -54,7 +58,7 @@ struct Obstacle {
 Obstacle obstacles[4]; 
 
 bool init() {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO  | SDL_INIT_AUDIO) < 0) {
         std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
         return false;
     }
@@ -82,6 +86,24 @@ bool init() {
         return false;
     }
 
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+    {
+        std::cout << "ERROR :" << Mix_GetError() << std::endl;
+    }
+
+    gMusic = Mix_LoadMUS("music.mp3");
+    if (gMusic == nullptr) {
+        std::cerr << "Failed to load music! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    if (Mix_PlayMusic(gMusic, -1) == -1) {
+        std::cerr << "Failed to play music! SDL_mixer Error: " << Mix_GetError() << std::endl;
+        return false;
+    }
+
+    FMusic = Mix_LoadWAV("snake.wav");
+
     startButton.rect = {SCREEN_WIDTH / 2 - 200, SCREEN_HEIGHT / 2 -150, 400, 200};
     startButton.isClicked = false;
 
@@ -100,6 +122,8 @@ void close() {
     SDL_DestroyWindow(gWindow);
     TTF_CloseFont(gFont);
     TTF_Quit();
+    Mix_Quit();
+    Mix_FreeMusic(gMusic);
     SDL_Quit();
 }
 
@@ -392,7 +416,8 @@ void checkFoodCollision() {
         snakeLength++;
         score += 5;
 
-    
+        Mix_PlayChannel(-1,FMusic, 0);
+
         if(temp<=score)
         {
           level +=1;
