@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -12,6 +13,8 @@ SDL_Renderer* gRenderer = nullptr;
 TTF_Font* gFont = nullptr;
 SDL_Surface* surface = nullptr;
 SDL_Texture* Texture = nullptr;
+SDL_Surface* imagesurface = nullptr;
+SDL_Texture* imageTexture = nullptr;
 
 Mix_Music* gMusic = NULL;
 Mix_Chunk* FMusic = NULL;
@@ -86,6 +89,11 @@ bool init() {
         return false;
     }
 
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+    std::cerr << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError() << std::endl;
+    return false;
+    }
+
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
     {
         std::cout << "ERROR :" << Mix_GetError() << std::endl;
@@ -128,81 +136,73 @@ void close() {
 }
 
 void drawObstacles() {
-    for (int i = 0; i < 4; ++i) {
-        SDL_SetRenderDrawColor(gRenderer,10,180,140,100);
-        SDL_RenderFillRect(gRenderer, &obstacles[i].rect);
-    }
+   for (int i = 0; i < 4; ++i) {
+        // Draw plaid.png on the obstacle rectangles
+        if(i==0 || i==3){
+             imagesurface = IMG_Load("obstra1.png");
+             imageTexture = SDL_CreateTextureFromSurface(gRenderer, imagesurface);
+             SDL_RenderCopy(gRenderer, imageTexture, nullptr, &obstacles[i].rect);
+             SDL_FreeSurface(imagesurface);
+             SDL_DestroyTexture(imageTexture);
+        }
+        else if(i==1 || i==2)
+        {
+            imagesurface = IMG_Load("obstra2.png");
+            imageTexture = SDL_CreateTextureFromSurface(gRenderer, imagesurface);
+            SDL_RenderCopy(gRenderer, imageTexture, nullptr, &obstacles[i].rect);
+            SDL_FreeSurface(imagesurface);
+            SDL_DestroyTexture(imageTexture);
+        }
+    } 
 }
 
 bool initObstacles() {
     // Initialize obstacle positions
-    obstacles[0].rect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2, 200, 30};
-    obstacles[1].rect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - 150, 30, 300};
-    obstacles[2].rect = {SCREEN_WIDTH / 2 + 100, SCREEN_HEIGHT / 2 - 150, 30, 300};
-    obstacles[3].rect = {0, 0, SCREEN_WIDTH, 40};
+    obstacles[0].rect = {SCREEN_WIDTH / 2 - 110, SCREEN_HEIGHT / 2-180, 250, 15};
+    obstacles[1].rect = {SCREEN_WIDTH / 2 -200, SCREEN_HEIGHT / 2 - 120, 15, 220};
+    obstacles[2].rect = {SCREEN_WIDTH / 2 + 200, SCREEN_HEIGHT / 2 - 120, 15, 220};
+    obstacles[3].rect =  {SCREEN_WIDTH / 2 - 120, SCREEN_HEIGHT / 2+150, 250, 15};
 
     return true;
 }
 
-//SDL_Rect obstagolrect1 = {SCREEN_WIDTH/2-100,SCREEN_HEIGHT/2,200,30};
-// SDL_Rect obstagolrect2 = {SCREEN_WIDTH/2-100,SCREEN_HEIGHT/2-150,30,300};
-//SDL_Rect obstagolrect3 = {SCREEN_WIDTH/2+100,SCREEN_HEIGHT/2-150,30,300};
-
 bool checkCollisionWithobstragol() {
-
-    if(snake[0].x >SCREEN_WIDTH/2-100 && snake[0].x <= SCREEN_WIDTH/2+100 && snake[0].y <SCREEN_HEIGHT/2+30 && snake[0].y >= SCREEN_HEIGHT/2)
-    {
-      return true;
+    for (int i = 0; i < 4; ++i) {
+        if (snake[0].x < obstacles[i].rect.x + obstacles[i].rect.w &&
+            snake[0].x + CELL_SIZE > obstacles[i].rect.x &&
+            snake[0].y < obstacles[i].rect.y + obstacles[i].rect.h &&
+            snake[0].y + CELL_SIZE > obstacles[i].rect.y) {
+            return true;
+        }
     }
-
-    if(snake[0].x >=SCREEN_WIDTH/2-105 && snake[0].x <= SCREEN_WIDTH/2-70 && snake[0].y <=SCREEN_HEIGHT/2+150 && snake[0].y >= SCREEN_HEIGHT/2-155)
-    {
-      return true;
-    }
-
-    if(snake[0].x >=SCREEN_WIDTH/2+95 && snake[0].x <= SCREEN_WIDTH/2+130 && snake[0].y <=SCREEN_HEIGHT/2+150 && snake[0].y >= SCREEN_HEIGHT/2-155)
-    {
-      return true;
-    }
-
     return false;
-    
 }
 
-bool checkCollisionWithFoodobstragol()
-{
-    if(food.x >SCREEN_WIDTH/2-100 && food.x <= SCREEN_WIDTH/2+100 && food.y <SCREEN_HEIGHT/2+30 && food.y >= SCREEN_HEIGHT/2)
-    {
-      return true;
+bool checkCollisionWithFoodSnake(int x, int y) {
+    for (int i = 0; i < snakeLength; ++i) {
+        if (x == snake[i].x && y == snake[i].y) {
+            return true;
+        }
     }
+    return false;
+}
 
-    if(food.x >=SCREEN_WIDTH/2-105 && food.x <= SCREEN_WIDTH/2-70 && food.y <=SCREEN_HEIGHT/2+150 && food.y >= SCREEN_HEIGHT/2-155)
-    {
-      return true;
+bool checkCollisionWithFoodObstacles(int x, int y) {
+    for (int i = 0; i < 4; ++i) {
+        SDL_Rect foodRect = {x, y, CELL_SIZE, CELL_SIZE};
+        if (!(x + CELL_SIZE <= obstacles[i].rect.x || obstacles[i].rect.x + obstacles[i].rect.w <= x ||
+              y + CELL_SIZE <= obstacles[i].rect.y || obstacles[i].rect.y + obstacles[i].rect.h <= y)) {
+            return true;
+        }
     }
-
-    if(food.x >=SCREEN_WIDTH/2+95 && food.x <= SCREEN_WIDTH/2+130 && food.y <=SCREEN_HEIGHT/2+150 && food.y >= SCREEN_HEIGHT/2-155)
-    {
-      return true;
-    }
-
-    if(food.x >=0 && food.x <=SCREEN_WIDTH && food.y <=40 && food.y >=0)
-    {
-      return true;
-    }
-
     return false;
 }
 
 void spawnFood() {
-    food.x = rand() % (SCREEN_WIDTH / CELL_SIZE) * CELL_SIZE;
-    food.y = rand() % (SCREEN_HEIGHT / CELL_SIZE) * CELL_SIZE;
-    
-    while(checkCollisionWithFoodobstragol()){
-    food.x = rand() % (SCREEN_WIDTH / CELL_SIZE) * CELL_SIZE;
-    food.y = rand() % (SCREEN_HEIGHT / CELL_SIZE) * CELL_SIZE;
-    }
-
+    do {
+        food.x = rand() % (SCREEN_WIDTH / CELL_SIZE) * CELL_SIZE;
+        food.y = rand() % (SCREEN_HEIGHT / CELL_SIZE) * CELL_SIZE;
+    } while (checkCollisionWithFoodObstacles(food.x, food.y) || checkCollisionWithFoodSnake(food.x, food.y));
 }
 
 void drawSnake() {
@@ -239,7 +239,14 @@ void drawSnake() {
 void drawFood() {
     SDL_Rect foodRect = {food.x, food.y, CELL_SIZE, CELL_SIZE};
     SDL_SetRenderDrawColor(gRenderer, 200,200,0, 0);
-    SDL_RenderFillRect(gRenderer, &foodRect);
+    
+    imagesurface = IMG_Load("Food.png");
+
+    imageTexture = SDL_CreateTextureFromSurface(gRenderer, imagesurface);
+    SDL_RenderCopy(gRenderer, imageTexture, nullptr, &foodRect);
+
+    SDL_FreeSurface(imagesurface);
+    SDL_DestroyTexture(imageTexture); 
 }
 
 void drawScore() {
@@ -308,6 +315,7 @@ void resetGame() {
     level = 0;
     score = 0;
     gameover = false;
+
     spawnFood();
 }
 
@@ -483,7 +491,7 @@ void renderGameScreen() {
     SDL_SetRenderDrawColor(gRenderer, 60,130, 110, 30);
     SDL_RenderClear(gRenderer);
 
-    surface = SDL_LoadBMP("middle.bmp");
+    surface = SDL_LoadBMP("image.bmp");
 	Texture =SDL_CreateTextureFromSurface(gRenderer,surface);
     SDL_RenderCopy(gRenderer,Texture,NULL,NULL);
     SDL_FreeSurface(surface);
@@ -537,6 +545,8 @@ void renderGameOverScreen() {
     SDL_FreeSurface(scoreSurface);
     SDL_DestroyTexture(gameOverTexture);
     SDL_DestroyTexture(scoreTexture);
+    SDL_FreeSurface(OverSurface2);;
+    SDL_DestroyTexture(OverTexture2);
 
     exitButton.isClicked = false;
     drawButton(exitButton, "No");
@@ -580,11 +590,13 @@ int main(int argc, char* args[]) {
 
             if ( checkCollisionWithItself()|| checkCollisionWithobstragol()) {
                 gameover = true;
-                currentState = GAME_OVER;
+                currentState = GAME_OVER; 
             }
 
             renderGameScreen();
         } else if (currentState == GAME_OVER) {
+            Mix_HaltMusic();
+
             renderGameOverScreen();
 
             if (exitButton.isClicked) {
