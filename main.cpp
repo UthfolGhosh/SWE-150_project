@@ -678,7 +678,7 @@ int main(int argc, char* args[]) {
             }
         }
 
-        SDL_Delay(120);
+        SDL_Delay(110);
     }
 
     close();
