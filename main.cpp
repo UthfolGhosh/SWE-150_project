@@ -3,6 +3,7 @@
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+#include <ctime>
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -18,6 +19,9 @@ SDL_Texture* imageTexture = nullptr;
 
 Mix_Music* gMusic = NULL;
 Mix_Chunk* FMusic = NULL;
+
+bool isBonusFood = false;
+Uint32 bonusFoodStartTime;
 
 enum GameState {
     START,
@@ -50,7 +54,8 @@ SDL_Point food;
 int score = 0;
 int level = 0;
 int temp = 15;
-int High=0;
+int High = 0;
+int count = 1;
 
 bool gameover = false;
 
@@ -137,7 +142,7 @@ void close() {
 
 void drawObstacles() {
    for (int i = 0; i < 4; ++i) {
-        // Draw plaid.png on the obstacle rectangles
+        // Draw png on the obstacle rectangles
         if(i==0 || i==3){
              imagesurface = IMG_Load("obstra1.png");
              imageTexture = SDL_CreateTextureFromSurface(gRenderer, imagesurface);
@@ -205,6 +210,85 @@ void spawnFood() {
     } while (checkCollisionWithFoodObstacles(food.x, food.y) || checkCollisionWithFoodSnake(food.x, food.y));
 }
 
+void spawnBonusFood() {
+    do {
+        food.x = rand() % (SCREEN_WIDTH / CELL_SIZE) * CELL_SIZE;
+        food.y = rand() % (SCREEN_HEIGHT / CELL_SIZE) * CELL_SIZE;
+    } while (checkCollisionWithFoodObstacles(food.x, food.y) || checkCollisionWithFoodSnake(food.x, food.y));
+}
+
+void drawFood() {
+    SDL_Rect foodRect = {food.x, food.y, CELL_SIZE, CELL_SIZE};
+    SDL_SetRenderDrawColor(gRenderer, 200,200,0, 0);
+    
+    imagesurface = IMG_Load("Food.png");
+
+    imageTexture = SDL_CreateTextureFromSurface(gRenderer, imagesurface);
+    SDL_RenderCopy(gRenderer, imageTexture, nullptr, &foodRect);
+
+    SDL_FreeSurface(imagesurface);
+    SDL_DestroyTexture(imageTexture); 
+}
+
+
+void checkBonusFoodCollision() {
+    if (snake[0].x == food.x && snake[0].y == food.y) {
+        if (isBonusFood) {
+            score += 10;
+            isBonusFood = false;
+        } else {
+            snakeLength++;
+            score += 5;
+            if (count%4 == 0) { // Every 4 regular food
+                spawnFood();
+                 drawFood();
+                isBonusFood = true;
+                bonusFoodStartTime = SDL_GetTicks();
+                spawnBonusFood();
+            }
+             count ++;
+        }
+
+        Mix_PlayChannel(-1, FMusic, 0);
+
+        if (temp <= score) {
+            level += 1;
+            temp += 15;
+        }
+
+        if (High < score) {
+            High = score;
+        }
+
+        spawnFood();
+    }
+}
+
+void drawBonusFood(){
+    if (isBonusFood) {
+        SDL_Rect bonusFoodRect = {food.x, food.y, CELL_SIZE, CELL_SIZE};
+        SDL_SetRenderDrawColor(gRenderer, 255, 0, 0, 0); // Red color for bonus food
+
+        imagesurface = IMG_Load("f1banana.png");
+        imageTexture = SDL_CreateTextureFromSurface(gRenderer, imagesurface);
+        SDL_RenderCopy(gRenderer, imageTexture, nullptr, &bonusFoodRect);
+
+        SDL_FreeSurface(imagesurface);
+        SDL_DestroyTexture(imageTexture);
+    }
+    else{
+          SDL_Rect foodRect = {food.x, food.y, CELL_SIZE, CELL_SIZE};
+    SDL_SetRenderDrawColor(gRenderer, 200, 200, 0, 0);
+    
+    imagesurface = IMG_Load("Food.png");
+    imageTexture = SDL_CreateTextureFromSurface(gRenderer, imagesurface);
+    SDL_RenderCopy(gRenderer, imageTexture, nullptr, &foodRect);
+
+    SDL_FreeSurface(imagesurface);
+    SDL_DestroyTexture(imageTexture);
+    }
+}
+
 void drawSnake() {
     for (int i = 0; i < snakeLength; ++i) {
 
@@ -250,21 +334,9 @@ void drawSnake() {
     }
 }
 
-void drawFood() {
-    SDL_Rect foodRect = {food.x, food.y, CELL_SIZE, CELL_SIZE};
-    SDL_SetRenderDrawColor(gRenderer, 200,200,0, 0);
-    
-    imagesurface = IMG_Load("Food.png");
-
-    imageTexture = SDL_CreateTextureFromSurface(gRenderer, imagesurface);
-    SDL_RenderCopy(gRenderer, imageTexture, nullptr, &foodRect);
-
-    SDL_FreeSurface(imagesurface);
-    SDL_DestroyTexture(imageTexture); 
-}
 
 void drawScore() {
-    SDL_Color textColor = {255, 250, 0, 0};
+    SDL_Color textColor = {255, 250, 255, 255};
     
     // Score text
     std::string scoreText = "Score: " + std::to_string(score);
@@ -406,21 +478,21 @@ void moveSnake() {
             snake[0].y -= CELL_SIZE;
             if (snake[0].y < 0) {
                 snake[0].y = SCREEN_HEIGHT - CELL_SIZE; // Wrap around to the bottom
-                  score -=3;
+                 score -=3;
             }
             break;
         case 1:
             snake[0].x += CELL_SIZE;
             if (snake[0].x >= SCREEN_WIDTH) {
                 snake[0].x = 0; // Wrap around to the left
-                  score -=3;
+                 score -=3;
             }
             break;
         case 2:
             snake[0].y += CELL_SIZE;
             if (snake[0].y >= SCREEN_HEIGHT) {
                 snake[0].y = 0; // Wrap around to the top
-                  score -=3;
+                 score -=3;
             }
             break;
         case 3:
@@ -430,28 +502,6 @@ void moveSnake() {
                   score -=3;
             }
             break;
-    }
-}
-
-void checkFoodCollision() {
-    if (snake[0].x == food.x && snake[0].y == food.y) {
-        snakeLength++;
-        score += 5;
-
-        Mix_PlayChannel(-1,FMusic, 0);
-
-        if(temp<=score)
-        {
-          level +=1;
-          temp +=15;
-        }
-
-        if(High < score)
-        {
-            High = score;
-        }
-
-        spawnFood();
     }
 }
 
@@ -511,12 +561,21 @@ void renderGameScreen() {
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(Texture);
 
+    drawBonusFood();
     drawObstacles();
     drawScore();
     drawSnake();
-    drawFood();
 
     SDL_RenderPresent(gRenderer);
+}
+
+void handleBonusFoodTimer() {
+    if (isBonusFood) {
+        Uint32 currentTime = SDL_GetTicks();
+        if (currentTime - bonusFoodStartTime >= 7000) { // Bonus food lasts for 7 seconds
+            isBonusFood = false;
+        }
+    }
 }
 
 void renderGameOverScreen() {
@@ -534,7 +593,7 @@ void renderGameOverScreen() {
 
     std::string scoreText = "FINAL Score: " + std::to_string(score);
 
-    SDL_Color textColor = {255,110,110,255};
+    SDL_Color textColor = {110,0,0,255};
     SDL_Color OptiontextColor = {0,0,0,255};
 
     SDL_Surface* gameOverSurface = TTF_RenderText_Solid(gFont, gameOverText.c_str(), textColor);
@@ -598,9 +657,10 @@ int main(int argc, char* args[]) {
         if (currentState == START) {
             renderStartScreen();
         } else if (currentState == GAME && !gameover) {
-            moveSnake();
-            checkFoodCollision();
-           
+            
+             handleBonusFoodTimer();
+             moveSnake();
+             checkBonusFoodCollision();
 
             if ( checkCollisionWithItself()|| checkCollisionWithobstragol()) {
                 gameover = true;
