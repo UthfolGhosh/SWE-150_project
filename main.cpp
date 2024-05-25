@@ -220,6 +220,7 @@ void spawnBonusFood() {
 void drawFood() {
     SDL_Rect foodRect = {food.x, food.y, CELL_SIZE, CELL_SIZE};
     SDL_SetRenderDrawColor(gRenderer, 200,200,0, 0);
+
     
     imagesurface = IMG_Load("Food.png");
 
@@ -678,7 +679,7 @@ int main(int argc, char* args[]) {
             }
         }
 
-        SDL_Delay(80);
+        SDL_Delay(120);
     }
 
     close();
